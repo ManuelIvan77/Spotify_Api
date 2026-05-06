@@ -21,7 +21,7 @@ class SpotifyProvider extends ChangeNotifier {
 
   _initialize() async {
     await getAccessToken();
-    await getEmergentArtists();
+    await getEmergentArtists('rock'); // Puedes cambiar el género aquí
   }
 
   Future<void> getAccessToken() async {
@@ -50,12 +50,12 @@ class SpotifyProvider extends ChangeNotifier {
     }
   }
 
-      Future<void> getEmergentArtists() async {
+      Future<void> getEmergentArtists(genre) async {
   if (_token.isEmpty) return;
 
   // URL correcta para búsqueda en Spotify Web API
   final url = Uri.parse(
-    'https://api.spotify.com/v1/search?q=genre:indie&type=artist&limit=10',
+    'https://api.spotify.com/v1/search?q=genre:$genre&type=artist&limit=10',
   );
 
   try {
