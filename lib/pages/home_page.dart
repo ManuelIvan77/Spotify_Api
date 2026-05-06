@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:api/provider/artists_provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // 1. Variable local para guardar el género seleccionado
+  String genreSelected = 'rock'; 
+
+  @override
   Widget build(BuildContext context) {
-    // Escuchamos al provider para redibujar la lista cuando cambien los datos
     final spotifyProvider = Provider.of<SpotifyProvider>(context);
 
     return Scaffold(
@@ -17,7 +24,7 @@ class HomePage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 1. BARRA DE BOTONES (GÉNEROS)
+          // 2. Fila de botones
           Container(
             height: 60,
             width: double.infinity,
@@ -25,16 +32,16 @@ class HomePage extends StatelessWidget {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _GenreButton(label: 'Rock', genre: 'rock'),
-                _GenreButton(label: 'Pop', genre: 'pop'),
-                _GenreButton(label: 'Indie', genre: 'indie'),
-                _GenreButton(label: 'Metal', genre: 'metal'),
-                _GenreButton(label: 'Jazz', genre: 'jazz'),
+                _buildGenreButton('Rock', 'rock', spotifyProvider),
+                _buildGenreButton('Pop', 'pop', spotifyProvider),
+                _buildGenreButton('Indie', 'indie', spotifyProvider),
+                _buildGenreButton('Metal', 'metal', spotifyProvider),
+                _buildGenreButton('Jazz', 'jazz', spotifyProvider),
               ],
             ),
           ),
 
-          // 2. LISTADO DE ARTISTAS
+          // 3. Listado de artistas
           Expanded(
             child: spotifyProvider.emergentArtists.isEmpty
                 ? const Center(child: CircularProgressIndicator())
@@ -50,6 +57,8 @@ class HomePage extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final artist = spotifyProvider.emergentArtists[index];
                       return Card(
+                        clipBehavior: Clip.antiAlias,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                         child: Column(
                           children: [
                             Expanded(
@@ -61,7 +70,7 @@ class HomePage extends StatelessWidget {
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Text(artist.name, overflow: TextOverflow.ellipsis),
+                              child: Text(artist.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
@@ -73,25 +82,28 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
-}
 
-// Widget pequeño para cada botón (para no repetir código)
-class _GenreButton extends StatelessWidget {
-  final String label;
-  final String genre;
-
-  const _GenreButton({required this.label, required this.genre});
-
-  @override
-  Widget build(BuildContext context) {
-    // Usamos listen: false porque el botón no necesita redibujarse 
-    // cuando la lista de artistas cambia, solo necesita disparar la acción.
-    final spotifyProvider = Provider.of<SpotifyProvider>(context, listen: false);
+  // 4. Método para construir los botones dinámicamente
+  Widget _buildGenreButton(String label, String genre, SpotifyProvider provider) {
+    // Comprobamos si este botón es el seleccionado
+    final isSelected = (genreSelected == genre);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: ElevatedButton(
-        onPressed: () => spotifyProvider.getEmergentArtists(genre),
+        style: ElevatedButton.styleFrom(
+          // Si está seleccionado es verde Spotify, si no, gris oscuro
+          backgroundColor: isSelected ? const Color(0xff1DB954) : Colors.grey[800],
+          foregroundColor: Colors.white,
+        ),
+        onPressed: () {
+          // Actualizamos el estado local para cambiar el color
+          setState(() {
+            genreSelected = genre;
+          });
+          // Llamamos al provider para cargar los datos
+          provider.getEmergentArtists(genre);
+        },
         child: Text(label),
       ),
     );
