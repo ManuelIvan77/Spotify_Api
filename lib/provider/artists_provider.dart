@@ -50,39 +50,34 @@ class SpotifyProvider extends ChangeNotifier {
     }
   }
 
-      Future<void> getEmergentArtists(genre) async {
+      // Usamos el parámetro opcional posicional [ ] con el default 'rock'
+Future<void> getEmergentArtists([ String genre = 'rock' ]) async {
   if (_token.isEmpty) return;
 
-  // URL correcta para búsqueda en Spotify Web API
+  // Limpiamos la lista para que el usuario vea el indicador de carga
+  emergentArtists = [];
+  notifyListeners();
+
+  // La URL corregida y profesional
   final url = Uri.parse(
-    'https://api.spotify.com/v1/search?q=genre:$genre&type=artist&limit=10',
+    'https://api.spotify.com/v1/search?q=genre:$genre&type=artist&limit=10'
   );
 
   try {
     final response = await http.get(
       url,
-      headers: {
-        'Authorization': 'Bearer $_token',
-        'Content-Type': 'application/json',
-      },
+      headers: {'Authorization': 'Bearer $_token'},
     );
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
+      final List<dynamic> artistsList = data['artists']['items'];
 
-      if (data['artists'] != null) {
-        final List<dynamic> artistsList = data['artists']['items'];
-        emergentArtists =
-            artistsList.map((item) => Artist.fromMap(item)).toList();
-
-        print('🎵 Artistas cargados: ${emergentArtists.length}');
-        notifyListeners();
-      }
-    } else {
-      print('❌ Error en búsqueda: ${response.body}');
+      emergentArtists = artistsList.map((item) => Artist.fromMap(item)).toList();
+      notifyListeners();
     }
   } catch (e) {
-    print('❌ Error de red: $e');
+    print('❌ Error en getEmergentArtists: $e');
   }
 }
 }
